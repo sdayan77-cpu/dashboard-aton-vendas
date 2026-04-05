@@ -1,0 +1,114 @@
+                }">${nome}</span></td>
+                    <td>${formatCurrency(data.valor)}</td>
+                    <td>${percent}%</td>
+                `;
+                platformTable.appendChild(tr);
+            });
+            
+            // Render tabela detalhada
+            const detailedTable = document.getElementById('detailedTable');
+            detailedTable.innerHTML = '';
+            
+            // Ordenar todos os marketplaces por valor
+            const todosMarketplaces = [...marketplacesData].sort((a, b) => b.valor - a.valor);
+            
+            todosMarketplaces.forEach(item => {
+                const plataforma = determinarPlataforma(item.marketplace);
+                const badgeClass = getBadgeClass(plataforma);
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.marketplace}</td>
+                    <td><span class="badge ${badgeClass}">${plataforma}</span></td>
+                    <td>${formatCurrency(item.valor)}</td>
+                    <td>${formatNumber(item.pedidos)}</td>
+                    <td>${item.percent}%</td>
+                `;
+                detailedTable.appendChild(tr);
+            });
+            
+            // Render gráfico
+            renderPlatformChart(plataformasOrdenadas, totalGeral);
+        }
+        
+        // Render platform chart
+        function renderPlatformChart(plataformasOrdenadas, totalGeral) {
+            const ctx = document.getElementById('platformChart').getContext('2d');
+            
+            const labels = plataformasOrdenadas.map(([nome, _]) => nome);
+            const values = plataformasOrdenadas.map(([_, data]) => data.valor);
+            const colors = labels.map(nome => getColor(nome));
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const percentage = totalGeral > 0 ? ((value / totalGeral) * 100).toFixed(1) : 0;
+                                    return `${label}: ${formatCurrency(value)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Sistema de login
+        const CORRECT_PASSWORD = "aton2026";
+        
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (password === CORRECT_PASSWORD) {
+                // Login bem-sucedido
+                errorDiv.classList.add('d-none');
+                document.getElementById('loginScreen').classList.add('d-none');
+                document.getElementById('dashboardScreen').classList.remove('d-none');
+                renderDashboard();
+            } else {
+                // Login falhou
+                errorDiv.classList.remove('d-none');
+                document.getElementById('password').value = '';
+                document.getElementById('password').focus();
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            document.getElementById('dashboardScreen').classList.add('d-none');
+            document.getElementById('loginScreen').classList.remove('d-none');
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').classList.add('d-none');
+        });
+
+        // Focar no campo de senha ao carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('password').focus();
+        });
+    </script>
+</body>
+</html>
